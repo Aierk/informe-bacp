@@ -6,7 +6,7 @@
 \usepackage[dvips]{graphicx}
 \usepackage{url}
 \usepackage[top=3cm,bottom=3cm,left=3.5cm,right=3.5cm,footskip=1.5cm,headheight=1.5cm,headsep=.5cm,textheight=3cm]{geometry}
-\usepackage[linesnumbered]{algorithm2e}
+\usepackage[linesnumbered, boxruled]{algorithm2e}
 %%\usepackage[]{algorithm}
 
 \begin{document}
@@ -48,50 +48,68 @@ Resumen del informe en no m\'as de 10 l\'ineas.
 
 \section{Representación}
 \subsection{Cromosoma}
-En la búsqueda de una solución a este problema, se implementó un Algoritmo Genético
-cuyo cromosoma corresponde a un arreglo de números enteros. El cromosoma tiene, entonces, la siguiente forma:
+En la búsqueda de una solución a este problema, se implementó un Algoritmo
+Genético cuyo cromosoma corresponde a un arreglo de números enteros. El
+cromosoma tiene, entonces, la siguiente forma:
 
 $$
 	[x_{1},x_{2}, \dots ,x_{n-1},x_{n}]
 $$
 
-En esta representación la posición $i$ del arreglo representa al ramo $x_{i}$ del plan académico. El dominio
-de cada curso $x_{i}$ sera un conjunto de enteros que van desde 1 hasta el número de periodos que debe contemplar la malla
-curricular. En otras palabras, cada valor del arreglo indicara el semestre en el cual se dictará el curso $x_{i}$.
+En esta representación la posición $i$ del arreglo representa al ramo $x_{i}$
+del plan académico. El dominio de cada curso $x_{i}$ sera un conjunto de enteros
+que van desde 1 hasta el número de periodos que debe contemplar la malla
+curricular. En otras palabras, cada valor del arreglo indicara el semestre en el
+cual se dictará el curso $x_{i}$.
 
 Ejemplificando lo anterior para 
 
 \subsubsection{Ventajas de la representación}
 Entre las ventajas de esta representación destacan:
 \begin{itemize}
-	\item El bajo costo de traducción entre la representación y la solución en lenguaje natural.
-	\item Manejar de forma simple la restricción dura: "Todos los ramos deben ser instanciado una sola vez",
-		del modelo matemático.
-	\item Facilitar el calculo del cumplimiento y violación de las restricciones blandas relacionadas con: los pre-requisitos, créditos y numero de ramos máximos y mínimos.
+	\item El bajo costo de traducción entre la representación y la solución
+          en lenguaje natural.
+	\item Manejar de forma simple la restricción dura: "Todos los ramos
+          deben ser instanciado una sola vez", del modelo matemático.
+	\item Facilitar el calculo del cumplimiento y violación de las
+          restricciones blandas relacionadas con: los pre-requisitos, créditos y
+          numero de ramos máximos y mínimos.
 \end{itemize}
 
 \subsubsection{Desventajas de la representación}
 \begin{itemize}
-	\item Por si sola, esta representación, es extremadamente sensible a operadores genéticos simples de mutación o cruzamiento, 
-	por lo que no es capaz de conservar o xxx las restricciones temporales de pre-requisitos.
+	\item Por si sola, esta representación, es extremadamente sensible a
+          operadores genéticos simples de mutación o cruzamiento, por lo que no
+          es capaz de conservar o xxx las restricciones temporales de
+          pre-requisitos.
 \end{itemize}
 
 \subsection{Representaciónes auxiliares}
-\subsubsection{Skelenton}
-El estudio de este problema revela un alto grado de conexión entre ramos y el periodo en el cual son instanciados heredado de las restricciones
-temporales de los pre-requisitos. Lo anterior inspiro la creación de una representación auxiliar, propia de cada problema, que fue llamada "esqueleto" del problema.
-Este "esqueleto" corresponde a un arreglo binario donde el curso $x_{i}$ tendrá el valor 1 si es parte de algún árbol de pre-requisitos y
-0 si no lo es. De esta manera el arreglo "esqueleto" es una representación directa de los grafos de restricciones y servirá para crear,
-de forma primitiva, mejoras a los operadores genéticos en busca de una minimización en la tasa de violación de restricciones blandas referentes a los pre-requisitos.
+\subsubsection{Esqueleto}
+El estudio de este problema revela un alto grado de conexión entre ramos y el
+periodo en el cual son instanciados heredado de las restricciones temporales de
+los pre-requisitos. Lo anterior inspiro la creación de una representación
+auxiliar, propia de cada problema, que fue llamada "esqueleto" del problema.
+Este ``esqueleto'' corresponde a un arreglo binario donde el curso $x_{i}$ tendrá
+el valor 1 si es parte de algún árbol de pre-requisitos y 0 si no lo es. De esta
+manera el arreglo ``esqueleto'' es una representación directa de los grafos de
+restricciones y servirá para crear, de forma primitiva, mejoras a los operadores
+genéticos en busca de una minimización en la tasa de violación de restricciones
+blandas referentes a los pre-requisitos.
 
 \subsubsection{Max Period}
-Para tratar otras las restricciones nacidas de los pre-requisitos, se utilizó un arreglo de enteros el cual indicaba el resultado de calcular el máximo periodo en el cual un ramo puede ser instanciado. Pasado este periodo
-la instancicion de dicho ramo generará irremediablemente soluciones infactibles. Al igual que la representación "esqueleto", "max period" es una representación propia de cada problema y no de cada solución.
+Para tratar otras las restricciones nacidas de los pre-requisitos, se utilizó un
+arreglo de enteros el cual indicaba el resultado de calcular el máximo periodo
+en el cual un ramo puede ser instanciado. Pasado este periodo la instancicion de
+dicho ramo generará irremediablemente soluciones infactibles. Al igual que la
+representación esqueleto, "max period" es una representación propia de cada
+problema y no de cada solución.
 
 \subsubsection{Otras representaciones}
 \begin{description}
-\item[Pre-requisitos:] Los pre-requisitos fueron representados con una matrix bidimencional con columnas de largo variable, donde cada columna
-representa un arreglo entero con el identificador del curso requisito.
+\item[Pre-requisitos:] Los pre-requisitos fueron representados con una matrix
+  bidimencional con columnas de largo variable, donde cada columna representa un
+  arreglo entero con el identificador del curso requisito.
 \item[Creditos:] Arreglo entero que indica el crédito de cada curso.
 \item[Cursos:] Arreglo de string que contiene el nombre de cada curso.
 
@@ -99,16 +117,30 @@ representa un arreglo entero con el identificador del curso requisito.
 
 
 \section{Descripción del algoritmo}
-Como se mencionó en la sección anterior, se desarrolló un Algoritmo Genético para buscar mallas curriculares balanceadas.
-La implementación de este tipo de meta-heristicas requiere el diseño de procedimientos para la creación
-de una población inicial, calculo de la calidad de la solución, procedimientos de operadores de mutación, cruzamiento y elitismo, de procedimientos de evaluación de soluciones, de una rutina para la selección de individuos, y el establecimiento de parámetros propios como el tamaño de la población y el número de generaciones.
-A continuación se detallan cada uno de estos elementos.
+Como se mencionó en la sección anterior, se desarrolló un Algoritmo Genético
+para buscar mallas curriculares balanceadas.  La implementación de este tipo de
+meta-heristicas requiere el diseño de procedimientos para la creación de una
+población inicial, calculo de la calidad de la solución, procedimientos de
+operadores de mutación, cruzamiento y elitismo, de procedimientos de evaluación
+de soluciones, de una rutina para la selección de individuos, y el
+establecimiento de parámetros propios como el tamaño de la población y el número
+de generaciones.  A continuación se detallan algunos de estos elementos.
 
 \subsection{Generación de la población inicial}
-Debido al número y grado de conexión entre los cursos y  los periodos con las restricciones, se decidió generar soluciones aleatorias que cumplieran con toda
-y cada una de las restricciones del problema. Es decir, cada individuo cumplirá no solo con el mínimo y máximo numero de créditos y ramos por semestre, si no que también asegurará que los pre-requisitos de cada ramo sean instanciados con anterioridad. Esto ultimo se logró filtrando de forma dinámica, en cada periodo, los ramos
-potencialmente instanciables, para luego seleccionar al azar uno de ellos. En este proceso  la representación "Max Period" juego un papel importante indicando
-tempranamente soluciones infactibles en las cuales no sería posible colocar todos los ramos dentro de una malla. Las soluciones que no lograron alcanzar el nivel de factibilidad óptimo, fueron descartadas. Para las instancias analizadas este procedimiento demostró ser eficiente manteniendo el nivel de soluciones no factibles a niveles bajos. El algoritmo \ref{alg:gennew} presenta el pseudo código de esta rutina.
+Debido al número y grado de conexión entre los cursos y los periodos con las
+restricciones, se decidió generar soluciones aleatorias que cumplieran con toda
+y cada una de las restricciones del problema. Es decir, cada individuo cumplirá
+no solo con el mínimo y máximo numero de créditos y ramos por semestre, si no
+que también asegurará que los pre-requisitos de cada ramo sean instanciados con
+anterioridad. Esto ultimo se logró filtrando de forma dinámica, en cada periodo,
+los ramos potencialmente instanciables, para luego seleccionar al azar uno de
+ellos. En este proceso la representación "Max Period" juego un papel importante
+indicando tempranamente soluciones infactibles en las cuales no sería posible
+colocar todos los ramos dentro de una malla. Las soluciones que no lograron
+alcanzar el nivel de factibilidad óptimo, fueron descartadas. Para las
+instancias analizadas este procedimiento demostró ser eficiente manteniendo el
+nivel de soluciones no factibles a niveles bajos. El algoritmo ~\ref{alg:gennew}
+presenta el pseudo código de esta rutina.
 
 \begin{algorithm}[H]
 \SetLine
@@ -141,9 +173,12 @@ Detener y desechar solución\;
 \end{algorithm}
 
 \subsection{Calculo de la calidad de la solución}
-Siguiendo el modelo matemático presentado en la sección 4, la calidad de la solución viene dada por la suma de las desviaciones a la media.
-A esta desviación se le suman el numero de restricciones violadas por la solución. Una solución de mayor calidad, sera aquella que posea
-un menor valor de esta sumatoria. El algoritmo \ref{alg:fit} muestra el pseudocódigo que permite calcular este valor.
+Siguiendo el modelo matemático presentado en la sección 4, la calidad de la
+solución viene dada por la suma de las desviaciones a la media.  A esta
+desviación se le suman el numero de restricciones violadas por la solución. Una
+solución de mayor calidad, sera aquella que posea un menor valor de esta
+sumatoria. El algoritmo ~\ref{alg:fit} muestra el pseudocódigo que permite
+calcular este valor.
 
 \begin{algorithm}[H]
 \SetLine
@@ -167,21 +202,26 @@ $f \gets f * (1+g)$ \;
 \end{algorithm}
 
 
-
-
 \subsection{Operador: Mutación}
-El operador unario de mutación consiste en seleccionar un individuo y mover algunos de sus ramos a otro semestre.
-Esta rutina afecta a todos los ramos y es gatillada previa evaluación de la tasa de aceptación de mutación.
-Adicionalmente se diseñaron características combinables para este operador los cuales buscaban interactuar con las restricciones en distintos grados:
+El operador unario de mutación consiste en seleccionar un individuo y mover
+algunos de sus ramos a otro semestre.  Esta rutina afecta a todos los ramos y es
+gatillada previa evaluación de la tasa de aceptación de mutación.
+Adicionalmente se diseñaron características combinables para este operador los
+cuales buscaban interactuar con las restricciones en distintos grados:
 
 \begin{description}
-	\item[Mutación normal:] Que evalua las restricciones de mínimos y máximos créditos antes de operar.
-	\item[Mutación ciega: ] La cual no tiene en cuenta las restricciones de mínimos y máximos créditos antes de operar
-	\item[Mutación con primera mejora:] La cual intenta operar un determinado numero de veces buscando una mejora en la solución.
-	\item[Mutación con esqueleto:] Que opera solo si el ramo no es parte del esqueleto de la solución.
+\item[Mutación normal:] Que evalua las restricciones de mínimos y
+  máximos créditos antes de operar.
+\item[Mutación ciega: ] La cual no tiene en cuenta las restricciones de
+  mínimos y máximos créditos antes de operar
+\item[Mutación con primera mejora:] La cual intenta operar un
+  determinado numero de veces buscando una mejora en la solución.
+\item[Mutación con esqueleto:] Que opera solo si el ramo no es parte del
+  esqueleto de la solución.
 \end{description}
 
-El algoritmo \ref{alg:mut} muestra la versión combinada de todas las características antes mencionadas.
+El algoritmo ~\ref{alg:mut} muestra la versión combinada de todas las
+características antes mencionadas.
 
 
 \begin{algorithm}[H]
@@ -215,14 +255,19 @@ $i--$
 
 
 \subsection{Operador: Cruzamiento}
-El operador se define como cruzamiento en un punto del cromosoma. Se crearon dos versiones:
+El operador se define como cruzamiento en un punto del cromosoma. Se crearon dos
+versiones:
 \begin{description}
-	\item[Cruzamiento en un punto de ramos:] Aplica el cruzamiento directamente al cromosoma.
-	\item[Cruzamiento en un punto de periodos:] Calcula los ramos de cada periodo e intenta intercambiar semestres completos entre las dos soluciones. 
+\item[Cruzamiento en un punto de ramos:] Aplica el cruzamiento directamente al
+  cromosoma.
+\item[Cruzamiento en un punto de periodos:] Calcula los ramos de cada periodo e
+  intenta intercambiar semestres completos entre las dos soluciones.
 \end{description}
 
-Al igual que la mutación, el cruzamiento posee una variante que toma en cuenta los ramos que pertenecen al esqueleto de la solución.
-Dada la gran diferencia entre cada implementación, el algoritmo \ref{alg:cruz} solo muestra el pseudocódigo del cruzamiento de semestres enteros.
+Al igual que la mutación, el cruzamiento posee una variante que toma en cuenta
+los ramos que pertenecen al esqueleto de la solución.  Dada la gran diferencia
+entre cada implementación, el algoritmo ~\ref{alg:cruz} solo muestra el
+pseudocódigo del cruzamiento de semestres enteros.
 
 \begin{algorithm}[H]
 \SetLine
@@ -250,14 +295,137 @@ Ignorar y continuar \;
 \label{alg:cruz}
 \end{algorithm}
 
+\subsection{Elitismo}
+Se utilizo un operador elitismo estándar de tamaño 1. Es decir, seleccionar el
+mejor elemento de una población y traspasarlo directamente a la siguiente.  El
+algoritmo ~\ref{alg:elite} muestra la rutina de este procedimiento.
 
+\begin{algorithm}[H]
+\SetLine
+\KwIn{Población actual $P$, Población siguiente $O$}
+
+$S \gets$ mejor solución de la población $P$ \;
+$O \gets \{S\}$ \;
+
+\caption{Operador: Elitismo}
+\label{alg:elite}
+\end{algorithm}
+
+\subsection{Algoritmo Genético}
+El algoritmo genético se ejecutó con tres pequeñas diferencias: Con elitismo,
+sin elitismo y con restart en el elitismo.  El motivo de estos cambios se
+explicara en la siguiente sección ~\ref{experimentos}. El algoritmo
+~\ref{alg:genetico} presenta la rutina de ejecución del método desarrollado.
+
+\begin{algorithm}[H]
+\SetLine
+\KwIn{generaciones $G$, tamaño de la población $T$, tasa de mutación $M$, tasa de cruzamiento $C$}
+
+Generar población inicial $P_{a}$ \;
+Crear población siguientes $P_{b} \gets \emptyset$ \;
+Calcular calidad de soluciones de $P_{a}$ \;
+\While{no se hayan alcanzado el numero de generaciones $G$}{
+\If{se debe aplicar elitismo}{
+Operador Elitismo con $P_{a}$ y $P_{b}$ \;
+}
+\While{$P_{b}$ no tenga el tamaño de población $T$}{
+Operador Mutación\;
+
+Operador Cruzamiento\;
+}
+$P_{a} \gets P_{b}$ \;
+Calcular calidad de soluciones de $P_{a}$ \;
+$P_{b} \gets \emptyset$ \;
+}
+\caption{Algoritmo Génetico}
+\label{alg:genetico}
+\end{algorithm}
+
+\section{Implemetación}
+Para implementar el algoritmo se desarrollo un software en C++ utilizando un
+paradigma orientado a objetos. El codigo de esta implementación se encuentra
+disponible en un repositorio GIT en
+GitHub \footnote{https://github.com/Aierk/bacp\_ga\_eclipse}. La imagen
+~\ref{clases} presenta el diagrama, resumido, de clases de la implementación.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.7\textwidth]{ga}
+  \caption{Diagrama de clases}
+\end{figure}
 
 \section{Experimentos}
-Se necesita saber como experimentaron, como definieron par\'ametros, como los fueron modificando, cuales 
-problemas se trataron, instancias, por que ocuparon esos problemas.
+\label{experimentos}
+Al igual que en los papers referenciados en la sección Estado del Arte, los
+experimentos se realizaron utilizando los casos oficiales almacenados en CSPLib
+para mallas de 8, 10 y 12 periodos. A continuación se listaran los experimentos
+de forma cualitativa:
+
+\subsection{Determinación de la población y generación}
+Estos experimentos tenian como tenian como objetivo observar el comportamiento
+del algoritmo con generaciones cercanas a 100 y poblaciónes del ordenes muy
+menores a ellas.  Utilizando los operadores mutación y cruzamiento sin mejoras,
+se observo que el algoritmo convergia muy rapido y no lograba mejorar
+considerablemente la población inicial. Estos experimentos tambien arrojaron que
+los castigos de la función Fitness, utilizada para evaluar las soluciones, no
+penalizaban los suficiente a las soluciones infactibles. Una vez terminados
+estos experimentos se genero una nueva función Fitness que castigaba de manera
+mas acertada las soluciones infactibles y que poblaciones de 30 individuos en
+100 generaciones permitia a las soluciones evolucionar de manera adecuada.
+
+\subsection{Determinación de las probabilidades de mutación y cruzamiento}
+Durante los experimentos se observó que la tasa de mejora que aplicaban los
+operadores cruzammiento y mutación era extremadamente baja. Analizando la
+evolución de los individuos se noto que empeoraban de forma muy rapida
+especialmente al utilizar al aumentar la probabilidad operador de mutación,
+apareciendo peridos sin ramos o con la mayoria de los requerimientos rotos.
+Esto ayudo a crear versiones mejoradas de ambos operados (presentados en la
+sección anterior) que demostraron dismuir la desviación de las nuevas
+poblaciones y de mejorar considerablemente y rapidamente a la población inicial.
+
+\subsection{Importancia Elitismo}
+Como se aprecio en los experimentos antes mecionados, y debido al alto grado de
+conectividad entre los ramos y las restricciones, las poblaciones tienden a
+empeorar, por lo que el uso de elitismo es critico en la obtención de un resultado optimo.
+
+\begin{center}
+\input{bacp8_elite_simple.tex}
+\end{center}
+
+
+
+
+\begin{center}
+\input{bacp8_no_elite_simple.tex}
+\end{center}
+
+\begin{center}
+\input{bacp8_no_elite_smart.tex}
+\end{center}
 
 \section{Resultados}
-Que fue lo que se logr\'o con la experimentaci\'on, incluir tablas y par\'ametros, gr\'aficos si fuera
+Una vez terminado los experimentos anteriores se definio el siguiente ambiente ideal de experimentación:
+\begin{itemize}
+ \item Mutación: Inteligente y con alguna mejora despues de 4 intentos con probabilidad de 0.5\%
+ \item Cruzamiento: Inteligente ignorando articulaciones del esqueleto con probabilidad de 0.7\%
+ \item Población: 30 sujetos.
+ \item Generaciones: 100.
+\end{itemize}
+
+\begin{center}
+\input{top8.tex}
+\end{center}
+
+\begin{center}
+\input{top10.tex}
+\end{center}
+\begin{center}
+\input{top12.tex}
+\end{center}
+
+
+
+etros, gr\'aficos si fuera
 posible, lo m\'as explicativo posible.
 
 \section{Conclusiones}
