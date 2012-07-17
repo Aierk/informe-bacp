@@ -5,6 +5,7 @@
 \usepackage{amsmath}
 \usepackage[dvips]{graphicx}
 \usepackage{url}
+\usepackage{pgf}
 \usepackage[top=3cm,bottom=3cm,left=3.5cm,right=3.5cm,footskip=1.5cm,headheight=1.5cm,headsep=.5cm,textheight=3cm]{geometry}
 \usepackage[linesnumbered, boxruled]{algorithm2e}
 %%\usepackage[]{algorithm}
@@ -61,10 +62,22 @@ genéticos y meta heurísticas de búsquedas locales entre otros, siendo la
 propagación de restricciones (método para tratar problemas CSP) el más
 recurrente a lo largo de los años.
 
-El lector finalmente prodrá apreciar la evolución que ha tenido este
-problema hacia unos nuevos y más generales, los cuales tratan de recoger
-las necesidades reales que universidades y casas de estudios han
-experimentado a lo largo de los años a la hora de diseñar estos curriculum académicos.
+El lector también podrá apreciar la evolución que ha tenido este
+problema hacia unos nuevos y más generales, los cuales tratan de
+recoger las necesidades reales que universidades y casas de estudios
+han experimentado a lo largo de los años a la hora de diseñar estos
+currículum académicos.
+
+Finalmente se presenta una implementación propia de una meta
+heurística evolutiva, en la cual se buscará generar soluciones de
+buena calidad aplicando sistemáticamente operadores de exploración y
+explotación un población de soluciones iniciales. Se tratará además el
+diseño y las características de los operadores necesarios para tratar
+este tipo problemas, se introducirá una representación adecuada para
+este problema y se establecerán una colección de experimentos que
+permitan no solo sintonizar si no que comparar los resultados esta
+implementación con las ya conocidas hasta el momento.
+
 
 
 \section{Definición del Problema}
@@ -834,7 +847,7 @@ GitHub \footnote{https://github.com/Aierk/bacp\_ga\_eclipse}. La imagen
 
 \begin{figure}[h]
   \centering
-  \includegraphics[width=\textwidth]{ga}
+  \pgfimage[width=\textwidth]{images/ga}
   \caption{Diagrama de clases}
 \end{figure}
 
@@ -978,10 +991,70 @@ experimentación con problemas de 12 periodos junto a mutación que
 desechaban soluciones inferiores.
 
 
-\section{Conclusiones}
-Luego de analizar los resultados se observo que son de gran calidad y que no se
-necesito un gran número de restart para encontrar valores óptimos conocidos.
 
+\section{Conclusiones y trabajo futuro}
+Muchos métodos y aproximaciones se han utilizado para atacar este
+problema durante el tiempo. Permitiendo la obtención de resultados
+óptimos con la utilización de métodos incompletos, en particular, con
+búsquedas locales. Son estas ultimas las que mas destacan a la hora de
+extender el problema a situaciones mas complejas como en los GBACP
+donde existen aun mas restricciones y consideraciones para generar una
+solución.
+
+Ahora si bien los métodos y las dimensiones del problema han cambiado con el
+tiempo, el modelo matemático a permanecido con pocas variaciones
+destacando solo el cambio en la función objetivo por otras mas
+inteligentes, que aseguren de mejor manera el balance en la carga
+académica de los alumnos.
+
+
+En cuanto a la implementación del Algoritmo Genético, y luego de
+analizar los resultados obtenidos y observar la evolución de la
+población sobre el tiempo, es fácil notar que el alto grado de
+restricción del problema hace difícil el trabajo meta heurística en
+cuanto al mejoramiento de la población inicial.  Esto significa que el
+resultado final esta, en la mayoría de los casos, íntimamente ligado a
+la calidad de la población inicial ya que una solución factible, por
+lo general general, no se aleja bruscamente de soluciones óptimas.
+
+Pese a lo anterior, se lograron obtener muy buenos resultados gracias
+a la calidad resultante de la población inicial nacida de la
+estrategia elegida para la generación de soluciones y al diseño del
+operador mutación que se encargó de mover ramos de un semestre a otro
+hasta encontrar un balance óptimo.
+
+
+Otro resultado importante nace de la relación entre la función de
+evaluación elegida por \cite{castro2001variable} y la elegida en esta
+implementación. Se puedo apreciar como para un mismo valor de ``carga
+máxima observada en algún periodo'' existía una colección de ``suma de
+desviaciones con respecto a la media'' las cuales acusaban una mejoría
+en el balance. Mejoría que, claramente, el trabajo mostrado
+\cite{castro2001variable} no lograba detectar. Por esto último es que
+se destaca la importancia del criterio presentado en
+\cite{schaus2007deviation} para el cálculo de problemas de
+optimización sujetos a restricciones que tienen como objetivo
+presentar una solución balanceada.
+
+
+
+También fue posible notar que para atacar de forma correcta este tipo
+de problemas, se necesitan diseñar operadores que estén altamente
+consiente de las restricciones, es decir, propagar restricciones de
+manera adecuada y eficiente. Siguiendo este pensamiento es que se
+vuelve interesante aplicar el conocimiento de otros campos como el de
+la animación donde aplicaciones como Blender, 3D Studio o Unity poseen
+herramientas para diseñar esqueletos con articulaciones las cuales al
+ser sometidas a esfuerzos propagaran el efecto al resto de la
+estructura acomodándola de tal manera que las resistencias de los
+componentes no sean violadas. En este caso cada ramo perteneciente del
+grafo de pre-requisitos se transformaría en una articulación y cada
+valor del arreglo ``max period'' se transformaría en la resistencia
+máxima a deformación. Con esto en mente los operadores mutación y
+cruzamiento se pueden diseñar como perturbaciones que modificarían
+toda la estructura y la función de evaluación se transformaría en las
+dimensiones de el tamaño de la caja que contengan dicho esqueleto y el
+resto de los ramos sueltos.
 
 \section{Bibliografía}
 \bibliographystyle{plain}
