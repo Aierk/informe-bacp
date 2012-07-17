@@ -8,10 +8,10 @@
 \usepackage[top=3cm,bottom=3cm,left=3.5cm,right=3.5cm,footskip=1.5cm,headheight=1.5cm,headsep=.5cm,textheight=3cm]{geometry}
 \usepackage[linesnumbered, boxruled]{algorithm2e}
 %%\usepackage[]{algorithm}
-
+\usepackage{graphicx}
 \begin{document}
 \title{Inteligencia Artificial \\ \begin{Large}Informe Final: Problema alanced Academic Curriculum Problem\end{Large}}
-\author{[Nombre autor]}
+\author{Sergio A. Morales}
 \date{\today}
 \maketitle
 
@@ -34,16 +34,464 @@ Bibliografía (5 \%): & \underline{\hspace{2cm}}\\
 %---------------------------------------------------------------------------%
 
 \begin{abstract}
-Resumen del informe en no m\'as de 10 l\'ineas.
+  Balanced Academic Curriculum Problem (BACP) es un problema de combinatoria,
+  presentado el año 2001, que busca generar curriculums o mallas académicas
+  balanceadas, es decir, con periodos académicos de carga homogénea. El presente
+  informe presenta el estado del arte y el modelo matemático del problema junto
+  con el diseño y los resultados de un del desarrollo de un Algoritmo Genético
+  capaz de tratar este problema.
 \end{abstract}
 
 \section{Introducción}
+En este informe se presenta el estado del arte de Balanced Academic Curriculum
+Problem (BACP) como un recorrido por su historia y los avances más destacables
+en su estudio.  BACP tiene como objetivo generar un curriculum o malla académica
+para un plan de estudios procurando un balance, en cada periodo, de la carga
+académica y la cantidad de ramos. Es interesante notar que este problema fue
+presentado a la comunidad científica por un trabajo en el que participó nuestro
+profesor Dr. Carlos Castro\cite{castro2001variable} en el año 2001 y el cual
+posee como referencia una memoria de un alumno del departamento de informática
+del año 1994\cite{vergara}. Este hecho, si bien no es crítico para el análisis
+del problema, destaca la calidad del plantel docente de nuestra universidad y la
+importancia de los problemas tratados por nuestros compañeros.
+
+Como se verá en este documento el problema ha sido tratado con métodos de
+programación Lineal, estrategias de propagación de restricciones, algoritmos
+genéticos y meta heurísticas de búsquedas locales entre otros, siendo la
+propagación de restricciones (método para tratar problemas CSP) el más
+recurrente a lo largo de los años.
+
+El lector finalmente prodrá apreciar la evolución que ha tenido este
+problema hacia unos nuevos y más generales, los cuales tratan de recoger
+las necesidades reales que universidades y casas de estudios han
+experimentado a lo largo de los años a la hora de diseñar estos curriculum académicos.
+
 
 \section{Definición del Problema}
+BACP se define como el problema de elegir el orden de cursos a lo largo
+de un cierto número de periodos academicos de tal manera que la carga
+total de cada periodo este balanceada. Es decir, una vez que los
+contenidos y los cursos son definidos por una casa de estudios, estos
+deben ser repartidos a lo largo de periodos de tiempo (que llamaremos
+periodos académicos), de tal manera que se respete la precedencia entre
+los cursos, se vigile que el número y el esfuerzo destinado en cada
+periodo no sean excesivamente altos o bajos para cualquier periodo y que
+todos y cada uno de los cursos sean asignados a sólo un periodo
+académico en particular.
+
+BACP ha sido considerado un problema interesante no sólo por su obvia
+importancia para casas de estudio a lo largo del mundo, sino que también por los
+múltiples desafíos que este presenta. BACP se comporta como un problema de
+satisfacción de restricciones (CSP) a muchos niveles por lo que su solución a
+sido atacada principalmente con métodos para resolver este tipo de
+problemas\cite{castro2001variable}. Es posible encontrar una colección de
+instancias de prueba para problemas BACP en la biblioteca CSPLib\footnote{CSPLib
+  es una biblioteca de casos de prueba para problemas de satisfacción de
+  restricciones. Mas información en: http://www.csplib.org/}.
+
+BACP también se puede ver como un problema de tipo empaquetamiento, en donde una
+colección finita de objetos con distintos pesos tiene que ser colocados dentro
+de bolsas de ciertas capacidades. En esta ocasión el objetivo es reducir el
+tamaño de las bolsas y no la cantidad de ellas.
+
+BACP, además, se puede considerar como un problema de
+scheduling\cite{pinedo2012scheduling} en donde cada curso se convierte en una
+actividad indivisible, los créditos representan el consumo de recursos y los
+pre-requisitos se convierten en restricciones temporales.
+
+Finalmente, BACP, es un excelente problema de
+balanceo\cite{schaus2007deviation}, los cuales se han convertido en un área
+interesante de los problemas de satisfacción de restricciones. Problemas donde el
+objetivo es satisfacer a un grupo de clientes, compartir recursos escasos o
+definir horarios de consultas para médicos se ven altamente beneficiados al
+encontrar soluciones balanceadas.
+
+En cuanto a su complejidad, su similitud con problemas tipo empaquetamiento y en
+particular con el problema de encontrar una solución dado un número determinado
+de bolsas (periodos), nos indican que Balanced Academic Curriculum Problem es un
+problema NP-completo, es decir, un problema duro de tratar, el cual se facilita
+en cierta medida con la adición de restricciones globales como los
+pre-requisitos de cada curso\cite{monette2007cp}.
+
+La presentación oficial del problema a la comunidad científica fue realizado en
+el 2001\cite{castro2001variable} y si bien es reconocido como una muy buena
+aproximación de los casos reales, también se ha dejado claro, con el paso de los
+años, su incompletitud en ciertos aspectos por no considerar factores de
+decisión existentes en la realidad como: las planificaciones de las clases que
+un profesor debe dictar en la semana\cite{schaerf1999survey}, la existencia de
+múltiples opciones a la hora de definir el contenido de un curriculum, etc. Es
+así como se definen:
+
+\begin{itemize}
+\item \textbf{Número de periodos}: En los cuales cada curso debe ser dictado en sólo un periodo.
+\item \textbf{Carga o crédito académico}: Cada curso tiene asociado una carga
+  que representa alguna medida de esfuerzo, importancia o tiempo que un alumno
+  deberá invertir en dicho curso.
+\item \textbf{Pre-requisitos}: Cada curso poseerá un conjunto de otros cursos
+  que debieron ser asignado con anterioridad a él.
+\item \textbf{Carga Académica mínima y máxima por periodo}: En cada periodo
+  existira un mínimo y un máximo número de créditos que deben ser asignados a
+  él.
+\item \textbf{Número mínimo y máximo de cursos por periodo}: En cada periodo
+  existirá un mínimo y un máximo número de cursos que deben ser asignados a él.
+\item \textbf{Curriculum académico}: Se refiere a la colección de cursos y sus
+  pre-requisitos que componen los objetos a distribuir.
+\end{itemize}
+
+
+El año 2009 \cite{chiarandini2012balanced} abordó este problema con otra
+visión dando a luz a los Generalized BACP. En este tipo de problemas la
+idea central de los BACP se mantiene, pero se agregan los siguientes
+componente al problema:
+
+\begin{itemize}
+\item \textbf{Preferencias de los profesores}: Las cuales se pueden
+  tratar como restricciones blandas e indican el periodo sobre el cual
+  los profesores preferirían que se dictara el ramo.
+\item \textbf{Curricula}: Se define como un conjunto de curriculums
+  académicos. Este conjunto reune todas las posibles soluciones óptimas
+  que son capaces de responder al problema siendo cada una de ellas una
+  opción valida que cumple con el plan de estudios.
+\end{itemize}
+
+Siguiendo la visión antes mencionada, \cite{schaerfmodelling} definió un
+tercer tipo de BACP: GBACP con cursos heterogéneos (GBACP-HC). En esta
+definición el problema incluía cursos que deben ser dictados una vez al
+año y a los cuales podrán asistir alumnos que estuvieran cursando
+diferentes periodos del plan de estudios.
 
 \section{Estado del Arte}
+BACP fue definido oficialmente en el año 2001 por Carlos Castro y Sebastián
+Manzano\cite{castro2001variable}. En dicho trabajo el problema se resolvía
+determinando si un curso era asignado a un periodo en particular, cuidando
+minimizar la carga máxima observada a lo largo de todos los periodos. En dicha
+ocasión se presentó un modelo de programción lineal entera (ILP) y un modelo
+basado en satisfacción de restricciones (CP).  Para resolver estos modelos se
+utilizo lp\_solve\footnote{http://lpsolve.sourceforge.net} y
+Oz\footnote{http://itee.uq.edu.au/~smith/objectz.html} respectivamente,
+logrando obtener buenos resultados sólo para problemas de mediana envergadura:
+solución optima en problemas de 8 periodos, solución no optima para problemas de
+10 periodos y ninguna solución, por time-out, para problemas de 12
+periodos. Cambiando la heurística que determinaba el orden de asignación de
+variables, Castro y Manzano lograron reducir el tiempo de cómputo y mejorar el
+rendimiento del algoritmo utilizado. 
+
+Con posterioridad en el año 2002 \cite{hnich2002modelling} trabajó sobre lo
+desarrollado por Castro y Manzano. \cite{hnich2002modelling} buscaba generar
+modelos híbridos CP e ILP con el objetivo de mejorar el rendimiento.
+\cite{hnich2002modelling} hizo notar que los modelos propuestos en
+\cite{castro2001variable} eran capaces de manejar correctamente los requisitos
+de carga académica pero no lograban establecer de forma eficiente las
+restricciones de pre-requisitos entre cursos. Debido a esto último propuso un
+nuevo modelo CP que hacia mejor uso de las restricciones globales (para
+beneficiar su fácil propagación) y que establecía las restricciones de
+pre-requisito de manera más simple y eficiente.  De esta manera, durante su
+trabajo, logro combinar su modelo con los ya establecidos para aprovechar las
+ventajas de cada uno en cuanto al manejo de las restricciones de carga académica
+y de pre-requisitos. Sus implementaciones arrojaron mejores resultados que los
+ya conocidos, encontrando soluciones donde antes \cite{castro2001variable} no
+logró concluir resultados. También demostró que la combinación de los dos
+modelos CP era la forma eficiente de encontrar soluciones óptimas y que el uso
+de ILP a su vez, era la única forma de comprobar dichos resultados. El cuadro 4 muestra el resultado en dicha ocasión.
+
+
+\begin{table}[h]
+\centering
+\caption{Resultados del trabajo en \cite{hnich2002modelling} en seg.}
+\begin{tabular}{|c|c|c|c|}
+\hline 
+Modelo & 8 periodos & 10 periodos & 12 periodos\tabularnewline
+\hline 
+\hline 
+ILP & 3.45 & 4.23 & 131.30\tabularnewline
+\hline 
+CP 1(Castro) & 58.52 & $\infty$ & $\infty$\tabularnewline
+\hline 
+CP 2 (Hnich) & 45.10 & $\infty$ & $\infty$\tabularnewline
+\hline 
+ILP+CP 2 & 0.81 & 8.44 & 3.05\tabularnewline
+\hline 
+CP 1+CP 2 & 0.29 & 0.59 & 1.09\tabularnewline
+\hline 
+\end{tabular}
+
+\end{table}
+
+Como se ha mencionado anteriormente BACP es un problema esencialmente de
+satisfacción de restricciones por lo que cualquier avance en la resolución de
+esos problemas es atractivamente aplicable en este caso. Es así que en el año
+2006 \cite{lambert2006solving} aplicó, y con mucho éxito, técnicas hibridas de
+algoritmos evolutivos con métodos de propagación de restricciones para resolver
+este tipo de problemas. En \cite{lambert2006solving} buscaban, además, crear un
+framework capaz de combinar de manera eficiente estas dos técnicas. Para probar
+su trabajo sobre los BACP, establecieron una colección de funciones que tendrían
+como objetivo: reducir el dominio (aplicar restricciones globales de carga
+académica y de pre-requisitos), dividir el dominio para transformar el problema
+en dos sub-problemas sin perder posibles soluciones en el proceso y funciones
+que contenían los operadores genéticos propiamente tal.
+
+Sus resultados mostraron que al principio de la búsqueda las funciones
+de propagación de restricción se llevaban gran parte de la tarea de búsqueda, y a
+medida que el tiempo transcurría la población alcanzaba consistencia local siendo
+los operados genéticos quienes terminaban realizando un alto porcentaje de la
+tarea de búsqueda de una solución óptima.
+
+Aplicando esta implementación al set de problemas publicados en CSPLib fueron
+capaces de encontrar nuevos y mejores resultados, disminuyendo aun más la carga
+máxima conocida hasta ese instante. Los cuadros 2, 3 y 4 muestran un resumen de sus resultados.
+
+
+\begin{table}[h]
+\centering
+\caption{Resultados del trabajo en  \cite{lambert2006solving} con 8 periodos}
+\begin{tabular}{|c|c|c|}
+\hline 
+Tecnica & Creditos maximos & Tiempo de ejecución\tabularnewline
+\hline 
+\hline 
+ILP & 17 & 1459\tabularnewline
+\hline 
+GA+CP & 17 & 15.05\tabularnewline
+\hline 
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Resultados del trabajo en \cite{lambert2006solving} con 10 periodos}
+\begin{tabular}{|c|c|c|}
+\hline 
+Tecnica & Creditos maximos & Tiempo de ejecución en segundos\tabularnewline
+\hline 
+\hline 
+ILP & 24 & 1459\tabularnewline
+\hline 
+GA+CP & 14 & 34.84\tabularnewline
+\hline 
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{Resultados del trabajo en \cite{lambert2006solving} con 12 periodos}
+\begin{tabular}{|c|c|c|}
+\hline 
+Tecnica & Creditos maximos & Tiempo de ejecución en segundos\tabularnewline
+\hline 
+\hline 
+ILP & NA & $\infty$\tabularnewline
+\hline 
+GA+CP & 18 & 35.20\tabularnewline
+\hline 
+\end{tabular}
+\end{table}
+
+
+
+En el año 2007 y durante la 4th International Conference on Integration
+of AI and OR Techniques in Constraint Programming for Combinatorial
+Optimization Problems, Schaus\cite{schaus2007deviation} introdujo el
+concepto de una restricción global de complejidad $O(n)$ (tiempo de
+resolución lineal) que servía como mejor criterio de balance en
+problemas de balanceo. En dicho trabajo se utilizó los problemas BACP
+para ejemplificar como el balance podía ser logrado no al minimizar la
+carga máxima por periodos (introducida por \cite{castro2001variable}),
+si no que más bien buscando minimizar la desviación de está con respecto
+a la carga promedio (carga total/número de periodos). Su trabajo
+introdujo 3 nuevos tipos de criterios que servían para asegurar balance
+en problemas de CSP:
+
+\begin{itemize}
+\item $C(1)=\sum_{x \in X}{|x-m|}$, que representa las sumas de las
+  desviaciones del promedio.
+\item $C(2)=\sum_{x \in X}{(x-m)^{2}}$, que representa las sumas del cuadrado de las
+  desviaciones del promedio.
+\item $C(\infty)Max_{x \in X}{|x-m|}$, que representa la maxima
+  desviación desde el promedio.
+\end{itemize}
+
+Mas tarde ese mismo año, Monette\cite{monette2007cp} rescato el trabajo
+realizado el 2002 por Hnich referente a las heurísticas de asignación de
+valor y variable, las cuales buscaban asignar la variable con menor
+dominio primero, junto con el trabajo realizado por Schaus que entregaba
+un nuevo y mejor criterio para resolver problemas que requerían
+balanceo, para analizar a fondo el problema BACP. Monette complementó el
+estudio del problema no sólo diseñando y creando un generador de
+instancia para poder realizar experimentos más completos, si no que
+también introduciendo "reglas de dominancia" las cuales tenían en cuenta
+no sólo el peso (o carga) de los ramos, si no que también sus
+pre-requisitos y los conjunto de pre-requisitos de los que eran
+parte. 
+
+Estas reglas tenian como objetivo guiar la búsqueda de manera más
+informada pues, según lo observado en \cite{monette2007cp}, los
+problemas BACP muchas veces eran simétricos al contar con cursos
+diferentes pero con los mismos pre-requisitos y carga académica (es
+decir, intercambiables entre sí sin modificar el óptimo). La
+introducción de estas reglas permitía instanciar cursos de manera tal
+que el óptimo resultante fuera de mejor calidad.
+
+Una de las primeras estrategias mostradas, que incluían estas reglas de
+dominancia para guiar las búsquedas, fueron aplicadas sobre métodos
+"Branch-and-Bound", en donde en cada iteración se buscaba una solución
+con un mejor valor (mejor balance) que la anterior. También, experimento
+con métodos de búsquedas locales utilizando Tabu Search para conbinarlas
+a Branch-And-Bound. Monette procuraba no sólo buscar un óptimo si no que
+también satisfacer las restricciones del problema realizando movimientos
+que consistían en elegir la variable y el valor de está que mejor
+mejorara la función objetivo. El algoritmo de búsqueda local se detenía
+una vez que encontraba el óptimo conocido o después de cierto número de
+iteraciones.
+
+Otra alternativa al uso de Branch-and-Bound fue la de agregar una
+restricción global en sentido contrario, es decir, forzar a que la
+función objetivo sea menor a un valor muy pequeño e ir aumentado dicho
+valor hasta encontrar una solución factible. Esta ultima visión ha
+mostrado, según Baptiste\cite{baptiste2001constraint}, excelentes
+resultados en la solución de problemas de tipo Scheduling.
+
+Los experimentos realizados por Monette además buscaban comparar la
+calidad de las soluciones encontradas según los criterios propuestos por
+\cite{castro2001variable} y los propuestos por
+\cite{schaus2007deviation} sin tener en cuenta el tiempo de
+procesamiento. Estos experimentos determinaron que minimizar el criterio
+de la desviación cuadrática de \cite{schaus2007deviation} se acercaba de
+mejor manera al resto de los métodos pero tendía a ser compleja por lo
+que proponía utiliza el criterio de suma de diferencias por ser el
+segundo mejor criterio (pero más simple de utilizar). El cuadro 5 muestra los resultados obtenidos con estas técnicas.
+
+
+\begin{table}[h]
+\centering
+
+
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline 
+ & Criterio Castro & C(1) & C(2) & C($\infty$) & Promedio\tabularnewline
+\hline 
+\hline 
+Criterio Castro & 0 & 10.62 & 16.53 & 0.06 & 9.07\tabularnewline
+\hline 
+C(1) & 2.63 & 0 & 6.27 & 0.12 & 3.00\tabularnewline
+\hline 
+C(2) & 0.28 & 0 & 0 & 0 & 0.09\tabularnewline
+\hline 
+C(infty) & 10.37 & 18.07 & 23.66 & 0 & 17.36\tabularnewline
+\hline 
+Promedio & 4.43 & 9.59 & 15.48 & 0.06 & \tabularnewline
+\hline 
+\end{tabular}
+\caption{Comparación entre criterios de balance. Cada fila muestra como un
+criterio logra acercarse al optimo del otro segun \cite{monette2007cp}.}
+\end{table}
+
+
+En año 2009 \cite{chiarandini2012balanced} buscó dar mas realismo al modelo y al
+problema. Introdujo dos nuevas características: la preferencia de los profesores
+(la cuales no siempre podrían ser satisfechas) y la generación de una
+``curricula'' como una colección de los curriculum de \cite{castro2001variable},
+la cual representaba diferentes opciones a un mismo plan de estudios. En
+\cite{chiarandini2012balanced} se bautizó este nuevo problema como Generalized
+BACP (GBACP). (Observar que BACP se puede considerar como un caso particular de
+GBACP).
+
+Utilizando métodos de ILP y búsqueda local con tabu search dinámico y
+simulated annealing, realizó varios experimentos demostrando que este
+nuevo problema era aun más complejo de resolver que la instancia
+presentada en \cite{castro2001variable}, logrando sólo encontrar
+soluciones parciales pero de calidad. Si bien su modelo no cuenta con
+una solución optima conocida, mostró como los métodos de búsqueda local
+podían, en muchos casos, presentar mejores resultados que los métodos de
+ILP en este tipo de problemas. El set de problemas que utilizó en sus
+experimento fueron publicadas para su uso posterior y fueron definidas
+por el prefijo UD seguido de un entero.
+
+Finalmente, y siguiendo la visión expuesta por \cite{chiarandini2012balanced},
+\cite{schaerfmodelling} experimento con problemas GBACP introduciendo el
+concepto de cursos heterogéneos, es decir, cursos a los cuales asistirían
+alumnos en distintos años del plan de estudios, pero que sólo eran dictados una
+vez al año. Si bien esta característica se acerca mucho al comportamiento real
+que tienen muchas universidades no siempre son una opción recomendable debido a
+los problemas pedagógicos que conlleva dictar cursos a alumnos con distintos
+niveles de avance y conocimiento. \cite{schaerfmodelling} bautizó este tipo de
+problemas como GBACP-HC.
+
+Para definir el espacio y movimientos de búsqueda,
+\cite{schaerfmodelling} experimentó con espacios de búsqueda que
+relacionaban cursos y periodos, para así poder definir movimientos que
+intercambiaban dos cursos entre periodos o cambiaban el periodo asignado
+a un curso; y otro en donde relacionaba un par cursos/curriculum con el año
+en que se dictaba el curso. Esto último permitía definir cambios en el
+año de un curso por curriculum o el intercambio de un par de estos.
+
+Si bien los resultados de estos experimentos no fueron presentados en dicha
+ocación si concluyo dos cosas interesantes respecto a su problema y los
+GBACP. Lo primero es que una solución de GBACP era efectivamente una solución
+válida de GBACP-HC, y lo segundo fue que en general era conveniente resolver
+primero el problema GBACP para luego utilizar ese resultado como punto de inicio
+de la nueva búsqueda refinada.
 
 \section{Modelo Matemático}
+El modelo matemático propuesto por \cite{castro2001variable} en el año
+2001, si bien no ha permanecido totalmente invariante, a sido la base
+para la mayoría de los estudios realizados a lo largo de los años,
+demostrando así ser un buen modelo al problema. Una de las mejoras que
+ha recibido este modelo fue la introducida por \cite{hnich2002modelling}
+el cual sustituyó las reglas de pre-requisitos por unas mas simples de
+computar y la introducida por \cite{monette2007cp} el cual sustituyó el
+criterio de balanceo por la suma de los cuadrados de las desviaciones
+desde el promedio.
+
+A continuación se presenta el modelo que mejor, según lo visto en la
+sección ``Estado del arte'', define un problema BACP:
+
+Cada curso estará identificado por un entero en el intervalo $[1,n]$. De
+manera similar cada periodo estará representado por un entero en el
+intervalo $[1,m]$. Con esta información se establecen los siguientes
+conjuntos de parámetros:
+
+\begin{itemize}
+ \item $\forall i \in [1,n]$, $P_{i}$ será el periodo academico del curso $i$.
+ \item $\forall i \in [1,n]$, $w_{i}$ será la carga o los creditos del curso $i$.
+ \item $\forall i \in [1,m]$, $L_{i}$ será la carga de cada periodo.
+\end{itemize}
+
+A lo anterior se agregan las constantes $a$ y $b$ que contienen el número máximo
+y mínimo de cursos que se pueden tomar por periodo y $c$ y $d$ que indican la
+mínima y máxima carga académica que se debe tener en cada periodo.
+
+Luego las rescticciones del problema se modelan de la siguiente manera:
+\begin{itemize}
+\item $\forall (i,j) \in [1,n] \times [1,m]$, $B_{i,j}$ será 1 si y sólo si
+  el curso $i$ será dado en el periodo $j$, en caso contrario será 0.
+ \item Los pre-requisitos se modelan de la siguiente manera: $\forall (i x j) \in
+   requisitos$: $P_{i} < P_{j}$.
+ \item $\forall 1 \leq j \leq m$: $L_{j} = \sum_{i=1}^{n}{B_{i,j}*w_i}$,
+   representa el cálculo de la carga de un periodo.
+ \item $\forall 1 \leq \in n$, $1 \leq j \leq m$: $(P_{i}=j) \Leftrightarrow   (B_{i,j}=1)$.
+ \item $\forall j \in [1,m]$: $a \leq \sum_{i=1}^{n}{B_{i,j}} \leq b$, que
+   condiciona el mínimo y el máximo de cursos tomados por semestre.
+ \item $\forall j \in [1,m]$: $c \leq L_{j} \leq d$, que condiciona el
+   mínimo y el máximo de creditos tomados por semestre.
+ \item $\forall i \in [1,n]$: $\sum_{j=1}^{m}{B_{ij}=1}$. Lo que
+   condiciona que cada curso debe ser instanciado sólo una
+   vez.
+\end{itemize}
+
+Luego, como se ha mencionado anteriormente, la funcion objetivo busca
+minimizar la suma total los cuadrados de la diferencia entre la carga
+total y la carga total promedio de cada periodo. A esta sumatoria la
+llamaremos $C$ y se calculará de la siguiente manera:
+
+\begin{equation*}
+  C = \sum_{i=1}^{m}{(m*L_{i}-w)^{2}}
+\end{equation*}
+
+Por lo que la función objetivo será:
+
+\begin{equation*}
+  Min\{C\}
+\end{equation*}
 
 
 \section{Representación}
@@ -62,26 +510,61 @@ que van desde 1 hasta el número de periodos que debe contemplar la malla
 curricular. En otras palabras, cada valor del arreglo indicara el semestre en el
 cual se dictará el curso $x_{i}$.
 
-Ejemplificando lo anterior para 
+A modo de ejemplo, la solución:
+$$
+[2,3,2,5,2,1,3,4,4,3,3,5,3,5,5,4,7,7,8,8,6,1,2,5,2,6,7,3,6,6,4,7,8,7,8,5,8,7,7,6,2,1,1,3,8,8]
+$$
+
+
+Representa en la malla de 8 periodos y 46 ramos mostrada en la tabla ~\ref{table:ejemplo}.
+
+\begin{table}[h]
+\centering
+\label{table:ejemplo}
+\caption{BACP 8 - Malla de ejemplo}
+\begin{tabular}{|c|l|}
+\hline 
+Periodo & Ramos\tabularnewline
+\hline 
+\hline 
+1 & mat192 - iei162 - iwn270 - hrw130\tabularnewline
+\hline 
+2 & dew100 - hcw310 - mat190 - iwn170 - hxwxx2 - iwi365\tabularnewline
+\hline 
+3 & fis100 - dew101 - mat191 - mat193 - hxwxx1 - iei271 - iei218\tabularnewline
+\hline 
+4 & fis101 - iwi131 - mat194 - hfw120\tabularnewline
+\hline 
+5 & iwg101 - fis102 - iei134 - iei141 - mat195 - iei273\tabularnewline
+\hline 
+6 & iei142 - iei231 - iei281 - iwn261 - iei274\tabularnewline
+\hline 
+7 & dewxx0 - hcw311 - iei241 - iei233 - iei261 - iei232 - iei262\tabularnewline
+\hline 
+8 & iei132 - iei133 - iei238 - iei272 - iei161 - iei219 - iei248\tabularnewline
+\hline 
+\end{tabular}
+
+\end{table}
+
 
 \subsubsection{Ventajas de la representación}
 Entre las ventajas de esta representación destacan:
 \begin{itemize}
-	\item El bajo costo de traducción entre la representación y la solución
-          en lenguaje natural.
-	\item Manejar de forma simple la restricción dura: "Todos los ramos
-          deben ser instanciado una sola vez", del modelo matemático.
-	\item Facilitar el calculo del cumplimiento y violación de las
-          restricciones blandas relacionadas con: los pre-requisitos, créditos y
-          numero de ramos máximos y mínimos.
+\item El bajo costo de traducción entre la representación y la solución
+  en lenguaje natural.
+\item Manejar de forma simple la restricción dura: "Todos los ramos
+  deben ser instanciado una sola vez", del modelo matemático.
+\item Facilitar el calculo del cumplimiento y violación de las
+  restricciones blandas relacionadas con: los pre-requisitos, créditos y
+  número de ramos máximos y mínimos.
 \end{itemize}
 
 \subsubsection{Desventajas de la representación}
 \begin{itemize}
 	\item Por si sola, esta representación, es extremadamente sensible a
           operadores genéticos simples de mutación o cruzamiento, por lo que no
-          es capaz de conservar o xxx las restricciones temporales de
-          pre-requisitos.
+          es capaz de conservar restricciones temporales de pre-requisitos.
 \end{itemize}
 
 \subsection{Representaciónes auxiliares}
@@ -100,41 +583,42 @@ blandas referentes a los pre-requisitos.
 \subsubsection{Max Period}
 Para tratar otras las restricciones nacidas de los pre-requisitos, se utilizó un
 arreglo de enteros el cual indicaba el resultado de calcular el máximo periodo
-en el cual un ramo puede ser instanciado. Pasado este periodo la instancicion de
+en el cual un ramo puede ser instanciado. Pasado este periodo la instanciación de
 dicho ramo generará irremediablemente soluciones infactibles. Al igual que la
-representación esqueleto, "max period" es una representación propia de cada
+representación esqueleto, ``max period'' es una representación propia de cada
 problema y no de cada solución.
 
 \subsubsection{Otras representaciones}
 \begin{description}
 \item[Pre-requisitos:] Los pre-requisitos fueron representados con una matrix
-  bidimencional con columnas de largo variable, donde cada columna representa un
+  bidimensional con columnas de largo variable, donde cada columna representa un
   arreglo entero con el identificador del curso requisito.
-\item[Creditos:] Arreglo entero que indica el crédito de cada curso.
-\item[Cursos:] Arreglo de string que contiene el nombre de cada curso.
+\item[Créditos:] Arreglo entero que indica el crédito de cada curso.
+\item[Cursos:] Arreglo de caracteres que contiene el nombre de cada curso.
 
 \end{description}
 
 
 \section{Descripción del algoritmo}
-Como se mencionó en la sección anterior, se desarrolló un Algoritmo Genético
-para buscar mallas curriculares balanceadas.  La implementación de este tipo de
+Como se mencionó en la sección anterior se desarrolló un Algoritmo Genético para
+buscar mallas curriculares balanceadas.  La implementación de este tipo de
 meta-heristicas requiere el diseño de procedimientos para la creación de una
 población inicial, calculo de la calidad de la solución, procedimientos de
 operadores de mutación, cruzamiento y elitismo, de procedimientos de evaluación
 de soluciones, de una rutina para la selección de individuos, y el
 establecimiento de parámetros propios como el tamaño de la población y el número
-de generaciones.  A continuación se detallan algunos de estos elementos.
+de generaciones entre otros.  A continuación se detallan algunos de estos
+elementos.
 
 \subsection{Generación de la población inicial}
 Debido al número y grado de conexión entre los cursos y los periodos con las
 restricciones, se decidió generar soluciones aleatorias que cumplieran con toda
 y cada una de las restricciones del problema. Es decir, cada individuo cumplirá
-no solo con el mínimo y máximo numero de créditos y ramos por semestre, si no
+no sólo con el mínimo y máximo número de créditos y ramos por semestre, si no
 que también asegurará que los pre-requisitos de cada ramo sean instanciados con
 anterioridad. Esto ultimo se logró filtrando de forma dinámica, en cada periodo,
 los ramos potencialmente instanciables, para luego seleccionar al azar uno de
-ellos. En este proceso la representación "Max Period" juego un papel importante
+ellos. En este proceso la representación ``Max Period'' juego un papel importante
 indicando tempranamente soluciones infactibles en las cuales no sería posible
 colocar todos los ramos dentro de una malla. Las soluciones que no lograron
 alcanzar el nivel de factibilidad óptimo, fueron descartadas. Para las
@@ -175,17 +659,17 @@ Detener y desechar solución\;
 \subsection{Calculo de la calidad de la solución}
 Siguiendo el modelo matemático presentado en la sección 4, la calidad de la
 solución viene dada por la suma de las desviaciones a la media.  A esta
-desviación se le suman el numero de restricciones violadas por la solución. Una
+desviación se le suman el número de restricciones violadas por la solución. Una
 solución de mayor calidad, sera aquella que posea un menor valor de esta
 sumatoria. El algoritmo ~\ref{alg:fit} muestra el pseudocódigo que permite
 calcular este valor.
 
 \begin{algorithm}[H]
 \SetLine
-\KwIn{Solución $S$, numero de periodos $P$, sumatoria de créditos de todos los ramos $C$}
+\KwIn{Solución $S$, número de periodos $P$, sumatoria de créditos de todos los ramos $C$}
 \KwOut{Fitness $f$}
 $w \gets \frac{C}{P}$
-\tcc{Promedio de esperado de créditos por semestre que representa el máximo balance teorico}
+\tcc{Promedio de esperado de créditos por semestre que representa el máximo balance teórico}
 
 $f \gets 0$ \;
 \ForEach{Periodo $i$}{
@@ -203,11 +687,11 @@ $f \gets f * (1+g)$ \;
 
 
 \subsection{Operador: Mutación}
-El operador unario de mutación consiste en seleccionar un individuo y mover
-algunos de sus ramos a otro semestre.  Esta rutina afecta a todos los ramos y es
-gatillada previa evaluación de la tasa de aceptación de mutación.
-Adicionalmente se diseñaron características combinables para este operador los
-cuales buscaban interactuar con las restricciones en distintos grados:
+El operador unitario de mutación consiste en seleccionar un individuo y mover
+algunos de sus ramos a otro semestre.  Esta rutina afecta a todos los ramos y se
+gatilla previa evaluación de la tasa de aceptación de mutación.
+Adicionalmente se diseñaron características, combinables entre si, para este operador las
+cuales buscan interactuar con las restricciones en distintos grados:
 
 \begin{description}
 \item[Mutación normal:] Que evalua las restricciones de mínimos y
@@ -215,8 +699,8 @@ cuales buscaban interactuar con las restricciones en distintos grados:
 \item[Mutación ciega: ] La cual no tiene en cuenta las restricciones de
   mínimos y máximos créditos antes de operar
 \item[Mutación con primera mejora:] La cual intenta operar un
-  determinado numero de veces buscando una mejora en la solución.
-\item[Mutación con esqueleto:] Que opera solo si el ramo no es parte del
+  determinado número de veces buscando una mejora en la solución.
+\item[Mutación con esqueleto:] Que opera sólo si el ramo no es parte del
   esqueleto de la solución.
 \end{description}
 
@@ -255,7 +739,7 @@ $i--$
 
 
 \subsection{Operador: Cruzamiento}
-El operador se define como cruzamiento en un punto del cromosoma. Se crearon dos
+Este operador se define como un cruzamiento en un punto del cromosoma. Se crearon dos
 versiones:
 \begin{description}
 \item[Cruzamiento en un punto de ramos:] Aplica el cruzamiento directamente al
@@ -264,10 +748,10 @@ versiones:
   intenta intercambiar semestres completos entre las dos soluciones.
 \end{description}
 
-Al igual que la mutación, el cruzamiento posee una variante que toma en cuenta
-los ramos que pertenecen al esqueleto de la solución.  Dada la gran diferencia
-entre cada implementación, el algoritmo ~\ref{alg:cruz} solo muestra el
-pseudocódigo del cruzamiento de semestres enteros.
+Al igual que la mutación, el cruzamiento posee una variante inteligente que toma
+en cuenta los ramos que pertenecen al esqueleto de la solución.  Dada la gran
+diferencia entre cada implementación, el algoritmo ~\ref{alg:cruz} sólo muestra
+el pseudocódigo del cruzamiento de semestres enteros.
 
 \begin{algorithm}[H]
 \SetLine
@@ -324,7 +808,7 @@ explicara en la siguiente sección ~\ref{experimentos}. El algoritmo
 Generar población inicial $P_{a}$ \;
 Crear población siguientes $P_{b} \gets \emptyset$ \;
 Calcular calidad de soluciones de $P_{a}$ \;
-\While{no se hayan alcanzado el numero de generaciones $G$}{
+\While{no se hayan alcanzado el número de generaciones $G$}{
 \If{se debe aplicar elitismo}{
 Operador Elitismo con $P_{a}$ y $P_{b}$ \;
 }
@@ -337,20 +821,20 @@ $P_{a} \gets P_{b}$ \;
 Calcular calidad de soluciones de $P_{a}$ \;
 $P_{b} \gets \emptyset$ \;
 }
-\caption{Algoritmo Génetico}
+\caption{Algoritmo Genético}
 \label{alg:genetico}
 \end{algorithm}
 
-\section{Implemetación}
-Para implementar el algoritmo se desarrollo un software en C++ utilizando un
-paradigma orientado a objetos. El codigo de esta implementación se encuentra
+\section{Implementación}
+Para implementar el algoritmo se desarrolló un software en C++ utilizando un
+paradigma orientado a objetos. El código de esta implementación se encuentra
 disponible en un repositorio GIT en
 GitHub \footnote{https://github.com/Aierk/bacp\_ga\_eclipse}. La imagen
 ~\ref{clases} presenta el diagrama, resumido, de clases de la implementación.
 
-\begin{figure}[h!]
+\begin{figure}[h]
   \centering
-  \includegraphics[width=0.7\textwidth]{ga}
+  \includegraphics[width=\textwidth]{ga}
   \caption{Diagrama de clases}
 \end{figure}
 
@@ -362,60 +846,101 @@ para mallas de 8, 10 y 12 periodos. A continuación se listaran los experimentos
 de forma cualitativa:
 
 \subsection{Determinación de la población y generación}
-Estos experimentos tenian como tenian como objetivo observar el comportamiento
-del algoritmo con generaciones cercanas a 100 y poblaciónes del ordenes muy
-menores a ellas.  Utilizando los operadores mutación y cruzamiento sin mejoras,
-se observo que el algoritmo convergia muy rapido y no lograba mejorar
-considerablemente la población inicial. Estos experimentos tambien arrojaron que
-los castigos de la función Fitness, utilizada para evaluar las soluciones, no
+Estos experimentos tenian como tenían como objetivo observar el comportamiento
+del algoritmo con generaciones cercanas a 100 y poblaciones del ordenes menores.
+Utilizando los operadores mutación y cruzamiento sin mejoras, se observo que el
+algoritmo realizaba pocas mejoras si la población era pequeña (8 a 20) y que
+convergía muy rápido como para utilizar un número muy alto de generaciones (200
+o más). Los experimentos iniciales también arrojaron que los castigos por romper
+restricciones de la función Fitness, utilizada para evaluar las soluciones, no
 penalizaban los suficiente a las soluciones infactibles. Una vez terminados
 estos experimentos se genero una nueva función Fitness que castigaba de manera
-mas acertada las soluciones infactibles y que poblaciones de 30 individuos en
-100 generaciones permitia a las soluciones evolucionar de manera adecuada.
+mas acertada las soluciones infactibles y se concluye que poblaciones de 30 individuos en
+100 generaciones permitía a las soluciones evolucionar de manera adecuada.
 
 \subsection{Determinación de las probabilidades de mutación y cruzamiento}
 Durante los experimentos se observó que la tasa de mejora que aplicaban los
-operadores cruzammiento y mutación era extremadamente baja. Analizando la
-evolución de los individuos se noto que empeoraban de forma muy rapida
-especialmente al utilizar al aumentar la probabilidad operador de mutación,
-apareciendo peridos sin ramos o con la mayoria de los requerimientos rotos.
-Esto ayudo a crear versiones mejoradas de ambos operados (presentados en la
-sección anterior) que demostraron dismuir la desviación de las nuevas
-poblaciones y de mejorar considerablemente y rapidamente a la población inicial.
+operadores cruzammiento y mutación eran extremadamente bajas. Analizando la
+evolución de los individuos se noto un rápido empeoramiento en su calidad a
+medida que aumentan las probabilidades de los operadores.
 
-\subsection{Importancia Elitismo}
-Como se aprecio en los experimentos antes mecionados, y debido al alto grado de
-conectividad entre los ramos y las restricciones, las poblaciones tienden a
-empeorar, por lo que el uso de elitismo es critico en la obtención de un resultado optimo.
+Esto impulso la creación de versiones mejoradas de ambos operados (presentados
+en la sección anterior) que demostraron dismuir la desviación de las nuevas
+poblaciones y de mejorar considerable y rápidamente a la población inicial.
 
-\begin{center}
-\input{bacp8_elite_simple.tex}
-\end{center}
+Experimentos posteriores demostraron la necesidad de una mayor exploración para
+problemas mas grandes, para poder así observar un mayor número de cambios entre
+generaciones, concluyendo las siguientes tasas de operación:
 
+\begin{table}[h]
+\label{table:tasas}
+\caption{Resumen de tasas de mutación y cruzamiento}
+\begin{tabular}{|c|l|l|}
+\hline 
+Problema & Tasa de mutación  & Tasa de cruzamiento \tabularnewline
+\hline 
+\hline 
+bacp 8 & 0.4 (mutación inteligente) & 0.7 (cruzamiento inteligente por periodos) \tabularnewline
+\hline 
+bacp 10 & 0.6 (mutación inteligente) & 0.7 (cruzamiento inteligente por periodos) \tabularnewline
+\hline 
+bacp 12 & 0.7 (con mutación simple) & 0.7 (cruzamiento inteligente por periodos) \tabularnewline
+\hline 
+\end{tabular}
+\end{table}
 
-
+Finalmente los gráficos 1 y 2 muestran la diferencia entre los operadores
+simples e inteligentes y su impacto en la evolución de la población.
 
 \begin{center}
 \input{bacp8_no_elite_simple.tex}
 \end{center}
 
+
+
 \begin{center}
 \input{bacp8_no_elite_smart.tex}
 \end{center}
 
+
+
+\subsection{Importancia Elitismo}
+Como se aprecio en los experimentos antes mecionados, y debido al alto grado de
+conectividad entre los ramos y las restricciones, los operadores tienden a
+empeorar la calidad de las poblaciones de forma natural, por lo que el uso de
+elitismo es critico en la obtención de un resultado óptimo. El gráfico 3 muestra
+como la inclusión de elitismos mejora inmediatamente el rendimiento de los
+operadores simples (comparar con gráfico 1).
+
+
+\begin{center}
+  \input{bacp8_elite_simple.tex}
+\end{center}
+
+
+\subsection{Otros experimentos menos importantes}
+Buscando lidear con la convergencia prematura, se implemento un mecanismo de
+restart para el elitismo acompañado de una explosión en la  mutación luego de un cierto
+número de generaciones estancadas. Estas estrategias no lograron dar resultados
+convincentes ya que nuevamente las generaciones sin elitismo solo tendían a
+alejarse del óptimo encontrado hasta ese momento.
+
+
+
 \section{Resultados}
-Una vez terminado los experimentos anteriores se definio el siguiente ambiente ideal de experimentación:
+Utilizando los valores y las estrategias desprendidas de la sección anterior, se
+presentan los mejores resultados de ejecuciones casuales no superiores a 10
+restarts para caso donde:
+
 \begin{itemize}
- \item Mutación: Inteligente y con alguna mejora despues de 4 intentos con probabilidad de 0.5\%
- \item Cruzamiento: Inteligente ignorando articulaciones del esqueleto con probabilidad de 0.7\%
- \item Población: 30 sujetos.
- \item Generaciones: 100.
+  \item \textbf{Mejor:} Corresponde valor del mejor individuo por generación.
+  \item \textbf{Castigo:} El número de restricciones rotas.
+  \item \textbf{Max. Carga:} Corresponde a la carga máxima de créditos observada en algún semestre.
 \end{itemize}
 
 \begin{center}
 \input{top8.tex}
 \end{center}
-
 \begin{center}
 \input{top10.tex}
 \end{center}
@@ -423,17 +948,42 @@ Una vez terminado los experimentos anteriores se definio el siguiente ambiente i
 \input{top12.tex}
 \end{center}
 
+Como se puede apreciar, en los tres casos se obtuvieron soluciones factibles y
+de altísima calidad.  Finalmente se presenta un tabla que compara los resultados
+obtenidos con los estudiados en el estado del arte donde se agrega además las
+evaluaciones necesarias para encontrar el mejor resultado por primera vez y los
+valores conocidos hasta el momento en el estudio del problema.
 
 
-etros, gr\'aficos si fuera
-posible, lo m\'as explicativo posible.
+\begin{table}[h]
+\centering
+\caption{Analisis de resultados obtenidos}
+\begin{tabular}{|c|c|c|p{2cm}|p{2cm}|p{2cm}|}
+\hline 
+Problema & Mejor F.O & Evaluaciones  & Carga máxima & Carga máxima óptima conocida & Máxima carga óptima teórica\tabularnewline
+\hline 
+\hline 
+BACP 8 & 3.75 & 11438 & 17 & 17 & 16.625\tabularnewline
+\hline 
+BACP 10 & 6 & 31318 & 14 & 14 & 13.4\tabularnewline
+\hline 
+BACP 12 & 6 & 45767 & 18 & 18 & 17\tabularnewline
+\hline
+\end{tabular}
+\end{table}
+
+Finalmente destacar que el tiempo de ejecución no formo parte de importante de
+los resultados por ser muy pequeño, siendo solo perceptible durante la etapa de
+experimentación con problemas de 12 periodos junto a mutación que
+desechaban soluciones inferiores.
+
 
 \section{Conclusiones}
-De acuerdo a la introducci\'on que se hizo, entregar afirmaciones RELEVANTES basadas en los experimientos
-y sus resultados.
+Luego de analizar los resultados se observo que son de gran calidad y que no se
+necesito un gran número de restart para encontrar valores óptimos conocidos.
 
-\section{Bibliograf\'ia}
-Indicando toda la informaci\'on necesaria de acuerdo al tipo de documento revisado. Las referencias deben ser citadas en el documento.
+
+\section{Bibliografía}
 \bibliographystyle{plain}
 \bibliography{Referencias}
 \end{document} 
