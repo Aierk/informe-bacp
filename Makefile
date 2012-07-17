@@ -6,7 +6,7 @@ images:
 	make -C images all
 
 clean:
-	rm -f $(DOC).{aux,bbl,blg,dvi,lof,log,lot,out,toc}
+	rm -f *.{aux,bbl,blg,dvi,lof,log,lot,out,toc}
 	make -C images clean
 
 distclean: clean
